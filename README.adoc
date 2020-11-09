@@ -279,38 +279,34 @@ We need to wait Openshift build and deploy our container. When done, you should 
 +
 image::images/37.png[]
 
+If you go to the Openshift webconsole in `Topology` you can see the pod **"i-users-api"** of integration available too:
+
+image::images/integration.png[]
+
+
 === Testing your integration
 
-You can check if your integration is working properly running clicking on `View` Integration and Copy and the External URL.
+You can check if your integration is working properly running clicking on `View` Integration and Copy and the External URL or clicking to access the route of integration(i-users-api) in Openshift webconsole:
 
-. With the URL in hand, try to do a GET on the /users endpoint. If you ysed exactly the same name suggested previously, the url will be:
+image::images/integration.png[]
+
+
+
+. With the URL in hand, try to do a GET on the /users endpoint. Your URL will be like this below
 +
 
-link:https://i-users-api-fuse-{user-username}.{openshift-app-host}/users[https://i-users-api-fuse-{user-username}.{openshift-app-host}/users, window="_blank", , id="get-user-api"]
+link:https://i-users-api-fuse-userX.openshift-app-host/users[]
 
 . To test the add user method (POST), try the following command in your terminal or the HTTP client of your preference:
 +
 [source,bash,subs="attributes+"]
 ----
-  curl -X POST -H "Content-Type: application/json" https://i-users-api-fuse-{user-username}.{openshift-app-host}/users -d '{"name": "myname", "age": 20, "phone": "61 3323-2314"}'
+  curl -X POST -H "Content-Type: application/json" https://i-users-api-fuse-userX.openshift-app-host/users -d '{"name": "myname", "age": 20, "phone": "61 3323-2314"}'
 ---- 
 
-. Also, take a look into the logs into the new deployed application, it's a Apache Camel microservice. All the work that we have done so far through this righ GUI it's generating Camel routes, if you look in details you can see by the logs that the API Specification is available on the `/openapi.json` endpoint.
-
-https://i-users-api-fuse-{user-username}.{openshift-app-host}/openapi.json
-
-[type=verification]
-Could you see the list of users returned by the `/users` endpoint?
-
-. Also we will use a Orders REST api you can explore then through the `swagger-ui`
-
-link:https://orders-rest-fuse-{user-username}.{openshift-app-host}[https://orders-rest-fuse-{user-username}.{openshift-app-host}, window="_blank", , id="orders-rest-api"]
+**DON'T FORGET TO MODIFY THE FIELDS "fuse-userX" AND "openshift-app-host" TO YOUR REALITY**
 
 
-image::images/38.png[]
-image::images/39.png[]
-
-[time=10]
 == 3Scale first contact through Wizard
 
 First, to get familiarized with 3Scale, let's open the link:{3scale-user-url}/p/admin/onboarding/wizard[Welcome Wizard, window="_blank", , id="welcome-wizard"]Welcome Wizard that is part of 3Scale admin onboarding for users' first access.
