@@ -4,7 +4,7 @@ Demo showing Fuse Online and 3Scale. This guide was based on Rodrigo Ramalho, it
 
 We will create and expose an API that get data from a posgresql database using Fuse Online. After that, we'll expose it through 3Scale, you will set it up on the API Management platform to have control and visibility about this API.
 
-![](images/homepage.png)
+image::images/homepage.png[]
 
 ## Pre-req
 
