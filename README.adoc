@@ -8,44 +8,20 @@ image::images/homepage.png[]
 
 ## Pre-req
 
-* Account on 3scale: https://www.3scale.net/
-* Anyone environment RHPDS with OCP **OR** the **"easy"** form: this environment have the operators of Fuse online instantiated and ready to use yet >> RHPDS > "Workshops > DIL Streaming - Event-driven Workshop
+* Account on 3scale SaaS: https://www.3scale.net/
+* Anyone environment RHPDS with OCP **OR** the **"easy"** form: this environment have the operators of Fuse online and 3scale instantiated and ready to use yet >> RHPDS > "Workshops > DIL Streaming - Event-driven Workshop
 
 ## Links
-
-* 3Scale Dashboard Samples: https://rramalho-admin.3scale.net
-* Link fuse online available on OCP cluster
-* OCP web link  are available via email when the environment are provisioned
+* Link Fuse online available on OCP cluster inside each project instantiated with the envinroment (DIL Streaming - Event-driven Workshop)
+* OCP web link are available via email when the environment are provisioned
 
 ## Easy/oficial environment: Workshops > DIL Streaming - Event-driven Workshop
 
-* When instantiated will receive all credentials of environment 
+* When instantiated will receive all credentials of environment by email
 * The projects are create automatically 
 * This environment have the operator of Fuse in each project called "fuse-userX", just click route of "Syndesys...hproxy" and Fuse Online will open. (In this demo was used **"fuse-user1"**)
+* This environment has 3scale operators in `Operator Hub` which can also be initialized
 
-## Credentials
-
-Use the following credentials to login into the web consoles:
-
-* Your *username* is: `{user-username}`
-* Your *password* is: `{user-password}`
-
-For the 3Scale API Management you are going to use *redhat* as password.
-
-[type=walkthroughResource]
-.Fuse Online
-****
-* link:{fuse-user-url}[Fuse Online Console, window="_blank", , id="resources-fuse-user-url"]
-****
-[type=walkthroughResource]
-.3Scale API Management
-****
-* link:{3scale-user-url}[3Scale API Management, window="_blank", , id="resources-3scale-user-url"]
-****
-[type=walkthroughResource]
-.Red Hat OpenShift Developer Console
-****
-* link:{openshift-host}/topology/ns/{namespace}[Topology View, window="_blank"]
 ****
 
 ## 1. First of all: Creating database on Openshift
