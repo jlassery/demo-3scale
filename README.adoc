@@ -20,7 +20,7 @@ image::images/homepage.png[]
 * When instantiated will receive all credentials of environment by email
 * The projects are create automatically 
 * This environment have the operator of Fuse in each project called "fuse-userX", just click route of "Syndesys...hproxy" and Fuse Online will open. (In this demo was used **"fuse-user1"**)
-* This environment has 3scale operators in `Operator Hub` which can also be initialized, if do you prefer use in OCP
+* This environment has 3scale operators in `Operator Hub` which can also be initialized, if do you prefer use it in OCP
 
 
 ## 1. First of all: Creating database on Openshift
