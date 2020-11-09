@@ -23,9 +23,34 @@ We will create and expose an API that get data from a posgresql database using F
 * The projects are create automatically 
 * This environment have the operator of Fuse in each project called "fuse-userX", just click route of "Syndesys...hproxy" and Fuse Online will open. (In this demo was used **"fuse-user1"**)
 
-### **First of all:** Creating database on Openshift
+## Credentials
 
-First, login to Openshift using the credentials sent to you via e-mail, in this DEMO was used login **'admin'**. Now, let's create a new database in project `fuse-userX`: (If you prefer, can create all things via Openshift WEB)
+Use the following credentials to login into the web consoles:
+
+* Your *username* is: `{user-username}`
+* Your *password* is: `{user-password}`
+
+For the 3Scale API Management you are going to use *redhat* as password.
+
+[type=walkthroughResource]
+.Fuse Online
+****
+* link:{fuse-user-url}[Fuse Online Console, window="_blank", , id="resources-fuse-user-url"]
+****
+[type=walkthroughResource]
+.3Scale API Management
+****
+* link:{3scale-user-url}[3Scale API Management, window="_blank", , id="resources-3scale-user-url"]
+****
+[type=walkthroughResource]
+.Red Hat OpenShift Developer Console
+****
+* link:{openshift-host}/topology/ns/{namespace}[Topology View, window="_blank"]
+****
+
+## 1. First of all: Creating database on Openshift
+
+Login to Openshift using the credentials sent to you via e-mail, in this DEMO was used login **'admin'**. Now, let's create a new database in project `fuse-userX`: (If you prefer, can create via Openshift WEB)
 ```bash
 # Create a new postgresql database using a Openshift template
 oc new-app --template=postgresql-persistent --param=POSTGRESQL_PASSWORD=redhat --param=POSTGRESQL_USER=redhat --param=POSTGRESQL_DATABASE=sampledb -n fuse-userX
@@ -58,45 +83,16 @@ oc delete pvc postgresql -n fuse-demo
 oc delete secret postgresql -n fuse-demo
 ```
 
-## 1. Creating the Users API using the Low code Integration Solution Fuse Online
+## 2. Creating the Users API using the Low code Integration Solution Fuse Online
 If you provisioned the **easy** environment have the operator of Fuse online in each project called "fuse-userX", just click route of "Syndesys...hproxy" and Fuse Online will open.
 
 image::images/routefuse.png[]
 
 
-*Credentials*
-
-Use the following credentials to login into the web consoles:
-
-* Your *username* is: `{user-username}`
-* Your *password* is: `{user-password}`
-
-For the 3Scale API Management you are going to use *redhat* as password.
-
-[type=walkthroughResource]
-.Fuse Online
-****
-* link:{fuse-user-url}[Fuse Online Console, window="_blank", , id="resources-fuse-user-url"]
-****
-[type=walkthroughResource]
-.3Scale API Management
-****
-* link:{3scale-user-url}[3Scale API Management, window="_blank", , id="resources-3scale-user-url"]
-****
-[type=walkthroughResource]
-.Red Hat OpenShift Developer Console
-****
-* link:{openshift-host}/topology/ns/{namespace}[Topology View, window="_blank"]
-****
-
-:sectnums:
-
-[time=20]
-== Creating the Users API using the Low code Integration Solution Fuse Online
 
 In order to create the Users API, first we need to manage to connect with the Users database.
 
-=== Creating the connection with the Users Database
+=== 2.1 Creating the connection with the Users Database
 
 . Open link:{fuse-user-url}[Fuse Online Console, window="_blank"] and log in with the credentials `{user-username}` `{user-password}` and accept the permission grant.
 +
@@ -135,7 +131,7 @@ image::images/06.png[]
 +
 image::images/10.png[]
 
-=== Design and Create the Users API from Scratch
+=== 2.2 Design and Create the Users API 
 
 Now the we have the Users database already configured as a valid connection, we will create the connection to interact with this database and export it as a REST API.
 
@@ -147,7 +143,7 @@ image::images/11.png[]
 +
 image::images/12.png[]
 
-. Choose `Create from scratch`
+. Choose `Create a new OpenAPI 3x..., like below`
 +
 image::images/13.png[]
 
@@ -189,7 +185,7 @@ image::images/16.png[]
 +
 image::images/17.png[]
 
-=== Creating an API for `Get All Users` (GET)
+=== 2.3 Creating an API for `Get All Users` (GET)
 
 In the previous step, we managed to create all the API Specification using a friendly UI based on the open-source project *Apicurio*. 
 Now that we defined which are the contract of our API, let's start the development of each method, that in Fuse Online, we call it 
@@ -225,7 +221,7 @@ image::images/24.png[]
 +
 image::images/25.png[]
 
-. In the `Custom Text`, write `Loading users from database ${body}` and click `Done`.
+. In the `Custom Text`, write `Loading users from database` and click `Done`.
 +
 image::images/26.png[]
 
@@ -245,7 +241,7 @@ image::images/30.png[]
 +
 image::images/30-1.png[]
 
-=== Creating API for Create a user (POST)
+=== 2.4 Creating API for Create a user (POST)
 
 . From the combobox `Operations`, choose `Create a users`:
 +
@@ -284,9 +280,9 @@ If you go to the Openshift webconsole in `Topology` you can see the pod **"i-use
 image::images/integration.png[]
 
 
-=== Testing your integration
+=== 2.5 Testing your integration!
 
-You can check if your integration is working properly running clicking on `View` Integration and Copy and the External URL or clicking to access the route of integration(i-users-api) in Openshift webconsole:
+You can check if your integration is working properly running clicking on `View` Integration on Fuse Online and Copy and the External URL or clicking to access the route of integration(i-users-api) in Openshift webconsole:
 
 image::images/integration.png[]
 
@@ -307,81 +303,37 @@ link:https://i-users-api-fuse-userX.openshift-app-host/users[]
 **DON'T FORGET TO MODIFY THE FIELDS "fuse-userX" AND "openshift-app-host" TO YOUR REALITY**
 
 
-== 3Scale first contact through Wizard
+== 3.0 Exposing and management your API using 3Scale:
+Access the console of 3scale with your credentials and let's put hands on. The next sections describes how Red Hat 3scale API Management works with APIs
 
-First, to get familiarized with 3Scale, let's open the link:{3scale-user-url}/p/admin/onboarding/wizard[Welcome Wizard, window="_blank", , id="welcome-wizard"]Welcome Wizard that is part of 3Scale admin onboarding for users' first access.
+To unsderstand the base, the 3scale separates your APIs into two main groups:
 
-. We are going to Create a *Backend* > a *Product* > and *Define some Method* and test it. 
+* **Backends:** Internal APIs bundled in a product. Backends grant API Providers the freedom to map their internal API organization structure to 3scale.
 
-. This is the most basic flow. That is a lot of things being created automatically for you behind the scenes. We are going to explore it in detail in the next sessions.
+* **Products:** Customer-facing APIs. Products facilitate the creation of strong and simplified offerings for API consumers.
+A product can contain multiple backends, and a backend can be used in multiple products. In other words, to **integrate and manage your API in 3scale you need to create both:**
 
-. 3Scale Wizard Welcome
+A Backend containing at least the URL of your API. The backend can optionally have mapping rules, methods and metrics to facilitate reusability.
+A Product where you define the application plans, and configure APIcast.
+
+
+
+### 3.1 Creating the User API Backends
+
+
+
+. Select `Create Backend` on the Tabs to create a new backend.
 +
-image::images/api-onboarding/wizard-01.png[]
-
-. 3Scale Wizard How does 3Scale Work
-+
-image::images/api-onboarding/wizard-02.png[]
-
-. 3Scale Wizard Define a Backend
-+
-image::images/api-onboarding/wizard-03.png[]
-
-. 3Scale Wizard Define a Product
-+
-image::images/api-onboarding/wizard-04.png[]
-
-. 3Scale Wizard Test Request
-+
-image::images/api-onboarding/wizard-05.png[]
-
-. 3Scale Wizard Overview Request Flow
-+
-image::images/api-onboarding/wizard-06.png[]
-
-. 3Scale Wizard What's next
-+
-image::images/api-onboarding/wizard-07.png[]
-
-. Try to spend some time exploring the product, navigating into the menus, trying to discover by yourself the features before we go ahead. Go to `Integration` > `Configuration` and you will be able to find the test URL.
-
-. As it is a GET Operation we can easily test inserting the URL into the Internet Browser
-+
-image::images/api-onboarding/wizard-08.png[]
-
-. Look what happen if we remove the `Key` parameter from the URL.
-+
-image::images/api-onboarding/wizard-09.png[]
-
-. Navigate to `API Product` and look that we can promote our URL to *Staging* that represents a *Draft* version of our API. And as soon as we are sure that this is the behavior expected we can promote to *Production*.
-+
-image::images/api-onboarding/wizard-10.png[]
-
-. Promote to *Production*
-+
-image::images/api-onboarding/wizard-11.png[]
-
-[time=10]
-== Creating the User API Backends
-
-API Backends is a fundamental part of 3Scale API Management, when we have a bunch of API Backends it allows to manage it easily.
-
-. Select `Backends` on the Tabs.
-+
-image::images/create-backends/create-backends-01.png[]
-
-. Click on `NEW BACKEND`
-+
-image::images/create-backends/create-backends-02.png[]
+image::images/backend.png[]
 
 . Fill the `Users API` backend creation form and click on `Create Backend`
 
 * `Name`: `Users API`
 * `System Name`: `users-api`
 * `Description`: `Users API`
-* `Private Base URL`: `https://i-users-api-fuse-{user-username}.{openshift-app-host}`
-
+* `Private Base URL`: `https://i-users-api-fuse-userX.openshift-app-host`
 +
+image::images/create-backends/create-backends-02.png[]
 image::images/create-backends/create-backends-03.png[]
 
 . Check `User API` Backend Information and select `Methods`
