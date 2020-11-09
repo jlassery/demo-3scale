@@ -61,11 +61,11 @@ oc delete secret postgresql -n fuse-demo
 ## 2. Creating the Users API using the Low code Integration Solution Fuse Online
 If you provisioned the **easy** environment have the operator of Fuse online in each project called "fuse-userX", just click route of "Syndesys...hproxy" and Fuse Online will open.
 
-image::images/routefuse.png[]
+image::images/topology.png[]
 
 
 
-In order to create the Users API, first we need to manage to connect with the Users database.
+In order to create the Users API, first we need to manage to connect with the Users database created previously.
 
 === 2.1 Creating the connection with the Users Database
 
