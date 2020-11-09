@@ -333,7 +333,6 @@ image::images/backend.png[]
 * `Description`: `Users API`
 * `Private Base URL`: `https://i-users-api-fuse-userX.openshift-app-host`
 +
-image::images/create-backends/create-backends-02.png[]
 image::images/create-backends/create-backends-03.png[]
 
 . Check `User API` Backend Information and select `Methods`
@@ -344,7 +343,7 @@ image::images/create-backends/create-backends-04.png[]
 +
 image::images/create-backends/create-backends-05.png[]
 
-. Create the `Get Users` method providing the following attributes and then click on `Create Method`.
+. Click on `New method` to create the `Get Users` method providing the following attributes and then click on `Create Method`.
 
 * `Friendly Name`: `Get Users`
 * `System Name`: `get-users`
@@ -353,7 +352,7 @@ image::images/create-backends/create-backends-05.png[]
 +
 image::images/create-backends/create-backends-06.png[]
 
-. Create the `Create Users` method providing the following attributes and then click on `Create Method`.
+. Create the `Create Users` (POST)method providing the following attributes and then click on `Create Method`.
 
 * `Friendly Name`: `Create Users`
 * `System Name`: `create-users`
@@ -366,9 +365,9 @@ image::images/create-backends/create-backends-07.png[]
 +
 image::images/create-backends/create-backends-08.png[]
 
-. Let's create the `mapping rule`. `Mapping rule` is the http path that will be requested to access the endpoint.
+. Let's create the `mapping rule`. `Mapping rules` is the http path that will be requested to access the endpoint.
 
-. Create the `Get users` Mapping rule
+. Create the `Get users` Mapping rule going to  `Mapping Rules` > `Add Mapping Rules`
 
 * `Verb`: `GET`
 * `Pattern`: `/users`
@@ -390,55 +389,22 @@ image::images/create-backends/create-backends-11.png[]
 +
 image::images/create-backends/create-backends-12.png[]
 
-. The `Users API` Backend Overview should look like that
+. And finnaly our backends should be like that at this moment
 +
 image::images/create-backends/create-backends-13.png[]
 
-. Now, let's repeat the Backend creation process but for the `Orders API`, Click on `Create Backend`
-
-* `Name`: `Orders API`
-* `System Name`: `orders-api`
-* `Description`: `Orders API`
-* `Private Base URL`: `https://order-rest-fuse-{user-username}.{openshift-app-host}`
-
-+
-image::images/create-backends/create-backends-15.png[]
-
-. Create two GET methods, `Get orders` and `Get all user orders`
-+
-image::images/create-backends/create-backends-17.png[]
-+
-image::images/create-backends/create-backends-19.png[]
-
-. Your methods should looks like that
-+
-image::images/create-backends/create-backends-20.png[]
-
-. Create the respective `mapping rules`
-+
-image::images/create-backends/create-backends-22.png[]
-+
-image::images/create-backends/create-backends-23.png[]
-
-. Your mapping rules should looks like that
-+
-image::images/create-backends/create-backends-24.png[]
-
-. And finnaly our backends should be like that at this moment
-+
-image::images/create-backends/create-backends-25.png[]
 
 Now that we have the Backends we can work to create a `Product` representing multiples backends 
 and finally expose this API on 3Scale API Management.
 
-[time=10]
-== Creating the Users API Product
 
-. Access the `PRODUCTS` tab and select `NEW PRODUCT`
+== 4.0 Creating the Users API Product
+
+. Access the `PRODUCTS` tab and select `Create Product`
 +
-image::images/create-product/create-product-01.png[]
+image::images/create-product/products.png[]
 
-. Select the `Define manually` option and use the following attributes
+. Use the following attributes to fill the fields and click on `Create Product`
 
 * `Name`: `Users API`
 * `System name`: `users-api`
@@ -451,7 +417,7 @@ image::images/create-product/create-product-02.png[]
 +
 image::images/create-product/create-product-03.png[]
 
-. Let's create two plans, one sandbox for enable users to try and another production that the user needs to pay for use it without any rate limit restriction. Create the `sandbox` application plan.
+. Let's create two plans, one **sandbox** for enable users to try and another **production** that the user needs to pay for use it without any rate limit restriction. In `Create Application Plan`, create the `sandbox` application plan.
 
 * `Name`: `sandbox`
 * `System Name`: `sandbox`
@@ -470,7 +436,7 @@ image::images/create-product/create-product-04.png[]
 +
 image::images/create-product/create-product-06.png[]
 
-. Now that you have both created, please `Publish` both.
+. Now that you have both created, please `Publish` both clicking on `Publish`.
 + 
 image::images/create-product/create-product-07.png[]
 
@@ -487,23 +453,19 @@ image::images/create-product/create-product-08.png[]
 +
 image::images/create-product/create-product-09.png[]
 
-. Add `Orders API` Backend
 
-* `Backend Name`: `Orders API`
-* `Path`: `/orders-api`
-
-+
-image::images/create-product/create-product-10.png[]
 
 . Your backends properly configured should looks like this
 +
-image::images/create-product/create-product-11.png[]
+image::images/create-product/backend2.png[]
 
-. Delete the actual `GET /` Mapping Rule
+. Delete the actual `GET /` Mapping Rule(created by default)
 +
 image::images/create-product/create-product-12.png[]
 
-. Promote the API to `Staging`
+. Promote the API to `Staging. We can promote our URL to Staging that represents a Draft version of our API. And as soon as we are sure that this is the behavior expected we can promote to Production.
+
+
 +
 image::images/create-product/create-product-13.png[]
 
@@ -511,7 +473,7 @@ image::images/create-product/create-product-13.png[]
 +
 image::images/create-product/create-product-14.png[]
 
-. As you can see the USER_KEY is invalid at this moment. It's because we don't have an Application yet, in order to solve it let's create one. On the `Up menu` select `Audience`.
+. As you can see the USER_KEY is invalid at this moment. It's because we don't have an Application using it yet, in order to solve it let's create one. On the `Up menu` select `Audience`.
 +
 image::images/create-product/create-product-15.png[]
 
@@ -528,23 +490,25 @@ image::images/create-product/create-product-17.png[]
 image::images/create-product/create-product-18.png[]
 
 . Select the `Production` plan under `Users API`
-
++
 image::images/create-product/create-product-19.png[]
 image::images/create-product/create-product-20.png[]
 image::images/create-product/create-product-21.png[]
 image::images/create-product/create-product-22.png[]
 
-. Now that we have an application, the `USER_KEY` query parameter is filled with a valid key from the application that we just created.
-+
-image::images/create-product/create-product-23.png[]
-image::images/create-product/create-product-24.png[]
 
-[time=10]
-== Exposing User API through developer portal
+. Now that we have an application, the `USER_KEY` query parameter is filled with a valid key from the application that we just created. You can test using the URL available in `Example curl for testing`
+
+
+image::images/create-product/create-product-23.png[]
+
+
+
+== 5.0 Exposing User API through developer portal
 
 . Select `Audience` on the upper drop down menu
 + 
-image::images/developer-portal/developer-portal-01.png[]
+image::images/developer-portal/devportal.png[]
 
 . Select `Audience` on the upper drop down menu
 + 
@@ -567,7 +531,7 @@ image::images/developer-portal/developer-portal-06.png[]
 image::images/developer-portal/developer-portal-06-1.png[]
 image::images/developer-portal/developer-portal-06-2.png[]
 
-. Take a look on the changes, it's already working with the Users API, and showing the applications plans defined.
+. Take a look on the changes, it's already working with the Users API, and showing the applications plans defined previously.
 + 
 image::images/developer-portal/developer-portal-07.png[]
 
@@ -583,16 +547,6 @@ image::images/developer-portal/developer-portal-09.png[]
 +
 image::images/developer-portal/developer-portal-10.png[]
 
-. Define those features allowing the user choose the which has the best fit. In order to make this plan *Read Only* Disable the `Create User` method and toggle following features:
-
-* Community Support
-* Free
-* Limited Calls
-* Read Only
-
-+
-image::images/developer-portal/developer-portal-11.png[]
-
 . Your application plans should looks like it, remember to publish both
 +
 image::images/developer-portal/developer-portal-12.png[]
@@ -603,48 +557,35 @@ image::images/developer-portal/developer-portal-13.png[]
 . Define a rule that charge `1$` for `10 API calls`. Yes, it's expensive, our service is first class and the content is super valuable.
 image::images/developer-portal/developer-portal-14.png[]
 
-. In the `Production` plan, toggle the following Features:
-
-* 24/7 support
-* Unlimited calls
-* Read and Write
-
+. To make a test using Developer Portal and a created Plan(sandbox/production), let's create an user manually that will subscribe your application in API plan created by us. Go to menu `Audience > Create`, fill as you prefer the fields.
 +
-image::images/developer-portal/developer-portal-15.png[]
+image::images/developer-portal/devportaluser.png[]
 
-. Return to the `Developer Portal` web page and take a look in the plans description, after click on `Signup to plan sandbox`
-+
-image::images/developer-portal/developer-portal-16.png[]
-
-. Fill the form with the application information
+. After created,click on user account name, click on `services subscriptions` and let's add our API
 + 
-image::images/developer-portal/developer-portal-17.png[]
+image::images/developer-portal/devportal2.png[]
 
-. The new account needs to be *Activated*, usually this process is via Email, but as we are not working with valid email address here, let's approve it manually in the following steps.
-+
-image::images/developer-portal/developer-portal-18.png[]
+. and let's add our API, making this available to use by user selected(in case of this demo "user1teste")
 
-. Navigate to the `Audience > Account > Listing` and click on `Activate`.
-+
-image::images/developer-portal/developer-portal-19.png[]
+image::images/developer-portal/devportal3.png[]
 
-. Return to the `Developer Portal` and do the sign in providing the credentials that you defined
+. Return to the `Developer Portal` and do the **sign in** providing the credentials that you created **(!USE FIREFOX TO TEST THIS!)**
 +
-image::images/developer-portal/developer-portal-20.png[]
+image::images/developer-portal/devportal4.png[]
 
 . Now that you are authenticated, click on `See your Applications & Credentials`
 +
 image::images/developer-portal/developer-portal-21.png[]
 
-. Click on `Create new application`
+. Click on `Create application`
 +
-image::images/developer-portal/developer-portal-23.png[]
+image::images/developer-portal/devportal5.png[]
 
-. Select the service `Users API`
+. Let's subscribe the app to API. Select the service `Users API`
 +
 image::images/developer-portal/developer-portal-24.png[]
 
-. Fill the form with `mobile-app` for Name and `Mobile App` for the description field
+. Fill the form with `user1teste`**(USE THE ACCOUNT CREATED BY YOU)** for Name and anyone description for the description field
 +
 image::images/developer-portal/developer-portal-25.png[]
 
@@ -652,11 +593,12 @@ image::images/developer-portal/developer-portal-25.png[]
 +
 image::images/developer-portal/developer-portal-26.png[]
 
-. Make some requests, and after going to see the `Statistics` into the developer portal, it allows the user to have total control over how it is using each API.
-image::images/developer-portal/developer-portal-27.png[]
+. Make some requests, and after going to see the `Statistics` into the developer portal, it allows the user to have total control over how it is using each API. Go to menu `Products` > Select `Users API` > `Integration` > `Configuration` and copy the URL `Example curl for testing` to test the key generated in Developer Portal
 
-[time=5]
-== User APIs Analytics
+image::images/developer-portal/devportal6.png[]
+
+
+== 6.0 User APIs Analytics
 
 . After making some requests into the `User APIs` you can see how the analytics works. Hits represent all the requests, and also you can see the requests for each method.
 +
