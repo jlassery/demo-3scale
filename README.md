@@ -1,48 +1,36 @@
-# Demo using Fuse Online and 3Scale
+# Demo using Fuse Online and 3Scale 
 
-Demo showing Fuse Online and 3Scale. This guide was based on [Rodrigo Ramalho demo](https://gist.github.com/hodrigohamalho/a52dfb24383c89b4c6b1022123e195f2).
+Demo showing Fuse Online and 3Scale. This guide was based on [Rodrigo Ramalho demo](https://gist.github.com/hodrigohamalho/a52dfb24383c89b4c6b1022123e195f2)and Gustavo luszczynski
 
-We will create and expose an API that get data from a posgresql database using Fuse Online. After that, we'll expose it through 3Scale.
+We will create and expose an API that get data from a posgresql database using Fuse Online. After that, we'll expose it through 3Scale, you will set it up on the API Management platform to have control and visibility about this API.
 
-> No code is necessary for this demo
+![](imgs/imagemh1.png)
 
-## Slides
-
-* https://docs.google.com/presentation/d/1MNQHqjj4XZAe7WWRiByu5VTzKuSK3-s-ZBL5uP2Sp-8/edit#slide=id.g5892f11135_0_756
 
 ## Links
 
 * 3Scale Dashboard Samples: https://rramalho-admin.3scale.net
-* Apicurio: https://www.apicur.io/
-* Microcks: http://microcks.github.io/
-* Syndesis Extensions: https://github.com/syndesisio/syndesis-extensions
+* Link fuse online
 
 ## Pre-req
 
-### Integrately Environment
+* Account on 3scale: https://www.3scale.net/
+* Anyone environment RHPDS with OCP **OR** the easy form: this environment have the operators of Fuse online instantiated and ready to use yet >>> RHPDS >      "Workshops > DIL Streaming - Event-driven Workshop" 
 
-You need to create an integrately environment
+### Workshops > DIL Streaming - Event-driven Workshop”
+
+* When instantiated will receive all credentials of environment 
+* The projects are create automatically 
+* This environment have the operator of Fuse in each project called "fuse-userX", just click route of "Syndesys...hproxy" and Fuse Online will open.
 
 ### Creating database on Openshift
 
-First, login to Openshift using a token.
-
-![](imgs/07.png)
-
-And then copy to clipboard your login command
-
-![](imgs/08.png)
-
-Now, let's create a new database in a project named `fuse-demo`:
-
+First, login to Openshift using the credentials sent to you via e-mail, in this DEMO was used login **'admin'**
+Now, let's create a new database in project `fuse-userX`: (If you prefer, can create all things via Openshift WEB)
 ```bash
-# Create new project on Openshift
-oc new-project fuse-demo
-
 # Create a new postgresql database using a Openshift template
 oc new-app --template=postgresql-persistent --param=POSTGRESQL_PASSWORD=redhat --param=POSTGRESQL_USER=redhat --param=POSTGRESQL_DATABASE=sampledb -n fuse-demo
 ```
-
 When the pod is ready, run:
 
 ```bash
@@ -53,11 +41,11 @@ POD_POSTGRESQL=$(oc get po | grep postgresql | awk '{print $1}')
 oc exec -it $POD_POSTGRESQL -- bash -c 'psql -U redhat -d sampledb -c "CREATE TABLE users(id serial PRIMARY KEY,name VARCHAR (50),phone VARCHAR (50),age integer);"'
 
 # Populate the database
-oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Rodrigo Ramalho', '(11) 95474-8099', 30);\""
-oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Thiago Araki', '(11) 95474-8099', 31);\""
-oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Gustavo Luszczynski', '(11) 95474-8099', 29);\""
-oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Rafael Tuelho', '(11) 95474-8099', 55);\""
-oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Elvis is not dead', '(11) 95474-8099', 36);\""
+oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Jade', '(21) 12345678', 24);\""
+oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Francisco', '(11) 95474-8099', 40);\""
+oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Pedro', '(11) 23454367', 29);\""
+oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Rafael', '(21) 95474-8099', 55);\""
+oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Rodrigo', '(11) 95474-8099', 36);\""
 
 # Make sure your data is saved
 oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"select * from users;\""
@@ -71,11 +59,96 @@ oc delete pvc postgresql -n fuse-demo
 oc delete secret postgresql -n fuse-demo
 ```
 
-### Creating a Database Connection on Fuse Online
+## 1.Creating the Users API using the Low code Integration Solution Fuse Online
+If you provisioned the **easy** environment have the operator of Fuse online in each project called "fuse-userX", just click route of "Syndesys...hproxy" and Fuse Online will open.
 
-Open your tutorial page: https://tutorial-web-app-webapp.apps.latam-3a88.openshiftworkshop.com
+![](imgs/im1.png)
+####  1.1. Creating the connection with the Users Database
+Put the credentials {userX} passwd:openshift and accept the permission grant.
 
-> Update this url `https://tutorial-web-app-webapp.apps.latam-3a88.openshiftworkshop.com` according to your environment
+![](imgs/im2.png)
+![](imgs/im3.png)
+
+1. Now that you are on the iPaaS solution Red Hat Fuse, click on `Connections`
+
+![](imgs/im4.png)
+
+2. Click on `Create Connection`
+
+![](imgs/im5.png)
+
+
+3. Filter for `database` and select the Database connection
+
+![](imgs/im6.png)
+
+4. Fill the database configuration with the following values:
+- Connection URL: jdbc:postgresql://postgresql.fuse-userX:5432/sampledb
+- Username: redhat
+- Password: redhat
+
+![](imgs/im7.png)
+Now, click on `Validate` to make sure everything is working as expected. If it is all good, click on `Next`.
+
+5. Fill **Users Database** for the `Connection Name`, then click on `Create`
+
+![](imgs/im8.png)
+
+Now you should see connection **Users Database** listed in the connections page.
+![](imgs/im9.png)
+
+#### 1.2. Design and Create the Users API 
+Now the we have the Users Database already configured as a valid connection, we will create the connection to interact with this database and export it as a REST API.
+
+1. On the side menu `Integrations, select `Create Integration`
+
+![](imgs/im10.png)
+
+2. Select API Provider from the connections listed.
+
+![](imgs/im11.png)
+
+3. Choose like below
+
+
+![](imgs/im12.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Open Fuse Online
 
