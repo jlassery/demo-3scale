@@ -63,13 +63,14 @@ If you provisioned the **easy** environment have the operator of Fuse online in 
 
 image::images/topology.png[]
 
+**! Use the same user and project during all demo to avoid errors !**
 
 
 In order to create the Users API, first we need to manage to connect with the Users database created previously.
 
 === 2.1 Creating the connection with the Users Database
 
-. Open link:{fuse-user-url}[Fuse Online Console, window="_blank"] and log in with the credentials `{user-username}` `{user-password}` and accept the permission grant.
+. Open link:{fuse-user-url}[Fuse Online Console, window="_blank"] and log in with the credentials `userX`/password `openshift` and accept the permission grant.
 +
 image::images/01.png[Fuse Online Access, role="integr8ly-img-responsive"]
 image::images/01-2.png[Fuse Online Access, role="integr8ly-img-responsive"]
