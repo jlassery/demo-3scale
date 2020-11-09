@@ -1,375 +1,694 @@
-# Demo using Fuse Online and 3Scale 
+// Attributes
+:walkthrough: API Management
+:title: Lab 4 - {walkthrough}
+:user-password: openshift
+:standard-fail-text: Verify that you followed all the steps. If you continue to have issues, contact a workshop assistant.
+:namespace: {user-username}
 
-Demo showing Fuse Online and 3Scale. This guide was based on [Rodrigo Ramalho demo](https://gist.github.com/hodrigohamalho/a52dfb24383c89b4c6b1022123e195f2)and Gustavo luszczynski
+// URLs
+:fuse-user-url: https://syndesis-fuse-{user-username}.{openshift-app-host}/
+:3scale-user-url: https://{user-username}-admin.{openshift-app-host}/
+:3scale-user-devportal: https://{user-username}.{openshift-app-host}/
 
-We will create and expose an API that get data from a posgresql database using Fuse Online. After that, we'll expose it through 3Scale, you will set it up on the API Management platform to have control and visibility about this API.
+[id='api-management']
+= {title}
 
-![](imgs/imagemh1.png)
+As part of the acquisition, your team at International Inc's is now working with Fleur de Lune's IT department to learn more about low code integration development and API Management. You are assigned on a mission to offer total 
+control of the APIs as security, rate limit, and monetization through a centralized management interface for the APIs existent
+on the International Inc. 
 
+To see how it will work on the entire environment, you must implement a first and basic service called users API. 
+So you are going to develop a microservice that retrieve users and orders information from a Postgre database and expose it as API, 
+Therefore, you will set it up on the API Management platform to have control and visibility about this API. 
 
-## Links
+*Audience:* Enterprise Integrators, System Architects, Developers, API Designers, Data Integrators
 
-* 3Scale Dashboard Samples: https://rramalho-admin.3scale.net
-* Link fuse online
+*Overview*
 
-## Pre-req
+image::images/00-lab-overview-01.png[Overview, role="integr8ly-img-responsive"]
 
-* Account on 3scale: https://www.3scale.net/
-* Anyone environment RHPDS with OCP **OR** the easy form: this environment have the operators of Fuse online instantiated and ready to use yet >>> RHPDS >      "Workshops > DIL Streaming - Event-driven Workshop" 
+API Products and Backends
 
-### Workshops > DIL Streaming - Event-driven Workshop”
+image::images/00-lab-overview-02.png[Overview, role="integr8ly-img-responsive"]
 
-* When instantiated will receive all credentials of environment 
-* The projects are create automatically 
-* This environment have the operator of Fuse in each project called "fuse-userX", just click route of "Syndesys...hproxy" and Fuse Online will open.
+API consume flow through available Application Plans
 
-### Creating database on Openshift
+image::images/00-lab-overview-03.png[Overview, role="integr8ly-img-responsive"]
 
-First, login to Openshift using the credentials sent to you via e-mail, in this DEMO was used login **'admin'**
-Now, let's create a new database in project `fuse-userX`: (If you prefer, can create all things via Openshift WEB)
-```bash
-# Create a new postgresql database using a Openshift template
-oc new-app --template=postgresql-persistent --param=POSTGRESQL_PASSWORD=redhat --param=POSTGRESQL_USER=redhat --param=POSTGRESQL_DATABASE=sampledb -n fuse-demo
-```
-When the pod is ready, run:
+*Credentials*
 
-```bash
-# Get postgresql pod name
-POD_POSTGRESQL=$(oc get po | grep postgresql | awk '{print $1}')
+Use the following credentials to login into the web consoles:
 
-# Create database
-oc exec -it $POD_POSTGRESQL -- bash -c 'psql -U redhat -d sampledb -c "CREATE TABLE users(id serial PRIMARY KEY,name VARCHAR (50),phone VARCHAR (50),age integer);"'
+* Your *username* is: `{user-username}`
+* Your *password* is: `{user-password}`
 
-# Populate the database
-oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Jade', '(21) 12345678', 24);\""
-oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Francisco', '(11) 95474-8099', 40);\""
-oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Pedro', '(11) 23454367', 29);\""
-oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Rafael', '(21) 95474-8099', 55);\""
-oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Rodrigo', '(11) 95474-8099', 36);\""
+For the 3Scale API Management you are going to use *redhat* as password.
 
-# Make sure your data is saved
-oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"select * from users;\""
-```
+[type=walkthroughResource]
+.Fuse Online
+****
+* link:{fuse-user-url}[Fuse Online Console, window="_blank", , id="resources-fuse-user-url"]
+****
+[type=walkthroughResource]
+.3Scale API Management
+****
+* link:{3scale-user-url}[3Scale API Management, window="_blank", , id="resources-3scale-user-url"]
+****
+[type=walkthroughResource]
+.Red Hat OpenShift Developer Console
+****
+* link:{openshift-host}/topology/ns/{namespace}[Topology View, window="_blank"]
+****
 
-> If for some reason you need to reinstall the database, just run:
+:sectnums:
 
-```bash
-oc delete all -l app=postgresql-persistent -n fuse-demo
-oc delete pvc postgresql -n fuse-demo
-oc delete secret postgresql -n fuse-demo
-```
+[time=20]
+== Creating the Users API using the Low code Integration Solution Fuse Online
 
-## 1.Creating the Users API using the Low code Integration Solution Fuse Online
-If you provisioned the **easy** environment have the operator of Fuse online in each project called "fuse-userX", just click route of "Syndesys...hproxy" and Fuse Online will open.
+In order to create the Users API, first we need to manage to connect with the Users database.
 
-![](imgs/im1.png)
-####  1.1. Creating the connection with the Users Database
-Put the credentials {userX} passwd:openshift and accept the permission grant.
+=== Creating the connection with the Users Database
 
-![](imgs/im2.png)
-![](imgs/im3.png)
+. Open link:{fuse-user-url}[Fuse Online Console, window="_blank"] and log in with the credentials `{user-username}` `{user-password}` and accept the permission grant.
++
+image::images/01.png[Fuse Online Access, role="integr8ly-img-responsive"]
+image::images/01-2.png[Fuse Online Access, role="integr8ly-img-responsive"]
 
-1. Now that you are on the iPaaS solution Red Hat Fuse, click on `Connections`
+. Now that you are on the iPaaS solution Red Hat Fuse, Click on `Connections`
++
+image::images/02.png[Fuse Online Connections, role="integr8ly-img-responsive"]
 
-![](imgs/im4.png)
+. Click on `Create Connection`
++
+image::images/03.png[Fuse Online Database Connection, role="integr8ly-img-responsive"]
 
-2. Click on `Create Connection`
+. Filter for `database` and select the `Database` connection
++
+image::images/04.png[Fuse Online Database Connection, role="integr8ly-img-responsive"]
 
-![](imgs/im5.png)
+. Fill the database configuration with the following values:
 
+* `Connection URL`: `jdbc:postgresql://postgresql.fuse-{user-username}:5432/sampledb`
+* `Username`: `redhat`
+* `Password`: `redhat`
 
-3. Filter for `database` and select the Database connection
++
++
+image::images/05.png[]
 
-![](imgs/im6.png)
+. Now, click on `Validate` to make sure everything is working as expected. If it is all good, click on `Next`.
 
-4. Fill the database configuration with the following values:
-- Connection URL: jdbc:postgresql://postgresql.fuse-userX:5432/sampledb
-- Username: redhat
-- Password: redhat
+. Fill `Users Database` for the *Connection Name*. Then, click on `Create`
++
+image::images/06.png[]
 
-![](imgs/im7.png)
-Now, click on `Validate` to make sure everything is working as expected. If it is all good, click on `Next`.
+. Now you should see connection `Users Database` listed in the connections page.
++
+image::images/10.png[]
 
-5. Fill **Users Database** for the `Connection Name`, then click on `Create`
+=== Design and Create the Users API from Scratch
 
-![](imgs/im8.png)
+Now the we have the Users database already configured as a valid connection, we will create the connection to interact with this database and export it as a REST API.
 
-Now you should see connection **Users Database** listed in the connections page.
-![](imgs/im9.png)
+. On the side menu `Integrations`, select `Create Integration`
++
+image::images/11.png[]
 
-#### 1.2. Design and Create the Users API 
-Now the we have the Users Database already configured as a valid connection, we will create the connection to interact with this database and export it as a REST API.
+. Select `API Provider` from the connections listed.
++
+image::images/12.png[]
 
-1. On the side menu `Integrations, select `Create Integration`
+. Choose `Create from scratch`
++
+image::images/13.png[]
 
-![](imgs/im10.png)
+. Give it a name:
++
+image::images/14-1.png[]
 
-2. Select API Provider from the connections listed.
+. Click on `Add a data type`
++
+image::images/14.png[]
 
-![](imgs/im11.png)
-
-3. Choose like below
-
-
-![](imgs/im12.png)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Open Fuse Online
-
-![](imgs/01.png)
-
-Click on `Connections`
-
-![](imgs/02.png)
-
-Click on `Create Connection`
-
-![](imgs/03.png)
-
-Then, select `Database`
-
-![](imgs/04.png)
-
-Fill the database configuration with the following values:
-
-```properties
-url: jdbc:postgresql://postgresql.fuse-demo:5432/sampledb
-user: redhat
-password: redhat
-```
-
-![](imgs/05.png)
-
-Now, click on `Validate` to make sure everything is working as expected. If it is all good, click on `Next`.
-
-![](imgs/09.png)
-
-The Connection Name is: `Users Database`. Then, click on `Create`
-
-![](imgs/06.png)
-
-Now you should see connection `Users Database` listed in the connections page.
-
-![](imgs/10.png)
-
-We are good to go for our API creation demo.
-
-## Demo
-
-### Create an API from Scratch
-
-Back to our `Home` page, click on `Create Integration`
-
-![](imgs/11.png)
-
-Then select `API Provider` from the connections listed.
-
-![](imgs/12.png)
-
-Choose `Create from scratch`
-
-![](imgs/13.png)
-
-Click on `Add a data type`
-
-![](imgs/14.png)
-
-Give it a name like: `User`
-
-![](imgs/15.png)
-
-Paste the following json example and choose `REST Resource`. Then, click `Save`.
-
-```json
+. Fill the *Name* field with the value `user` and paste the following JSON and choose `REST Resource`. Then, click `Save`. ** PLEASE DO NOT COPY USING THE PLUGIN **
++
+[source,json,subs="attributes+"]
+----
 {
     "id": 0,
     "name": "Rodrigo Ramalho",
-    "phone": "11 95474-8099",
+    "phone": "11 99555-2211",
     "age": 30
 }
-```
+----
++
+image::images/15.png[]
 
-Click `Save` again.
+. Click `Save` again.
 
-![](imgs/16.png)
+. Please take a look and see that all the CRUD REST operations (GET, POST, PUT, AND DELETE ) are already created for you with the attributes well defined and the data types inferred from the json model that we provided a model. We will implement *just two of them*. The *GET method retrieves all the users and the *POST to create a new user*. So, please remove the other methods.
 
-Now, click on `Next`
+. Select `/users/{userid}` and do a `Right Click` and select `Delete` option. 
++
+image::images/16-1.png[]
 
-![](imgs/17.png)
+. Your API Specification must look like that
++
+image::images/16.png[]
 
-And give a name for our integration: `Users API`. Click on `Save and continue`
+. Click on `Next`
++
+image::images/17.png[]
 
-![](imgs/18.png)
+=== Creating an API for `Get All Users` (GET)
 
-#### Creating an API for `Get All Users` (GET)
+In the previous step, we managed to create all the API Specification using a friendly UI based on the open-source project *Apicurio*. 
+Now that we defined which are the contract of our API, let's start the development of each method, that in Fuse Online, we call it 
+as a *Flow*. 
 
-Create now a flow for the GET Method that list all users:
+We will implement *just two of them*. The *GET method retrieves all the users and the *POST to create a new user*.
 
-![](imgs/19.png)
+. Create a flow for the GET Method that list all users:
++
+image::images/19.png[]
 
-Add a step in our flow clicking on `+`:
+. Add a step in the flow clicking on `+`:
++
+image::images/20.png[]
 
-![](imgs/20.png)
+. Choose the `Users Database` connection created previously.
++
+image::images/21.png[]
 
-Now choose our `Users Database` connection created previously.
+. Click on `Invoke SQL to obtain, store, update or delete data`:
++
+image::images/22.png[]
 
-![](imgs/21.png)
+. Fill the `SQL Statement` with: `select * from users` and then click `Next`
++
+image::images/23.png[]
 
-Click on `Invoke SQL to obtain, store, update or delete data`:
+. Let's add a log step for debug purposes in our flow. Click again on the `+`:
++
+image::images/24.png[]
 
-![](imgs/22.png)
+. Then choose `Log`
++
+image::images/25.png[]
 
-Fill the `SQL Statement` with: `select * from users` and then click `Next`
+. In the `Custom Text`, write `Loading users from database ${body}` and click `Done`.
++
+image::images/26.png[]
 
-![](imgs/23.png)
+. Can you see a warning showing that we have a mapping conflict? In order to solve it, let's add a `data mapping` to our Flow. 
 
-Add a log step in our flow. Click again on the `+`:
+. In the last step, click in the yellow icon and then go to `Add a data mapping step`.
++
+image::images/27.png[]
 
-![](imgs/24.png)
+. Expand both panel clicking on the arrows, drag and drop the source fields matching with the target fields and then click on `Done`.
++
+image::images/29.png[]
 
-Then choose `Log`
+. Click now on `Save`. Please pay attention not to publish! Otherwise, you will have to wait for the publishing process to finish.
++
+image::images/30.png[]
++
+image::images/30-1.png[]
 
-![](imgs/25.png)
+=== Creating API for Create a user (POST)
 
-In the `Custom Text`, write `Loading users from database` and click `Done`.
+. From the combobox `Operations`, choose `Create a users`:
++
+image::images/31.png[]
 
-![](imgs/26.png)
+. Repeat the same steps you did on the previous step: `Creating an API for Get All Users (GET)`
 
-Now, let's add a data mapping to our flow. In the last step, click in the yellow icon and then go to `Add a data mapping step`.
+. When adding the Users Database, you need to click on `Invoke SQL to obtain, store, update or delete data` and add `INSERT INTO USERS(NAME,PHONE,AGE) VALUES(:#NAME,:#PHONE,:#AGE);` in the field `SQL statement`.
++
+image::images/32.png[]
 
-![](imgs/27.png)
+. Also, during the data mapping you won't need to associate the `id` field because it will be already generate by the postgres database.
++
+image::images/33.png[]
 
-Expand both panel clicking on the arrows:
+. In the end, you should have something like:
++
+image::images/34.png[]
 
-![](imgs/28.png)
+. Click on `Publish`
++
+image::images/35.png[]
 
-Now, drag and drop the source fields matching with the target fields and then click on `Done`.
+. Save and Publish!
++
+image::images/35-1.png[]
 
-![](imgs/29.png)
+We need to wait Openshift build and deploy our container. When done, you should see `Published version 1` on the top of the page.
 
-Click now on `Save`.
+. Go to the `Home` page, and look that is one integration running.
++
+image::images/37.png[]
 
-![](imgs/30.png)
+=== Testing your integration
 
-#### Creating API for `Create a users` (POST)
+You can check if your integration is working properly running clicking on `View` Integration and Copy and the External URL.
 
-From the combobox `Operations`, choose `Create a users`:
+. With the URL in hand, try to do a GET on the /users endpoint. If you ysed exactly the same name suggested previously, the url will be:
++
 
-![](imgs/31.png)
+link:https://i-users-api-fuse-{user-username}.{openshift-app-host}/users[https://i-users-api-fuse-{user-username}.{openshift-app-host}/users, window="_blank", , id="get-user-api"]
 
-Repeat the same steps you did when `Creating an API for Get All Users (GET)`
+. To test the add user method (POST), try the following command in your terminal or the HTTP client of your preference:
++
+[source,bash,subs="attributes+"]
+----
+  curl -X POST -H "Content-Type: application/json" https://i-users-api-fuse-{user-username}.{openshift-app-host}/users -d '{"name": "myname", "age": 20, "phone": "61 3323-2314"}'
+---- 
 
-When adding the Users Database, you need to click on `Invoke SQL to obtain, store, update or delete data` and add `INSERT INTO USERS(NAME,PHONE,AGE) VALUES(:#NAME,:#PHONE,:#AGE);` in the field `SQL statement`.
+. Also, take a look into the logs into the new deployed application, it's a Apache Camel microservice. All the work that we have done so far through this righ GUI it's generating Camel routes, if you look in details you can see by the logs that the API Specification is available on the `/openapi.json` endpoint.
 
-![](imgs/32.png)
+https://i-users-api-fuse-{user-username}.{openshift-app-host}/openapi.json
 
-Also, during the data mapping you won't need to associate the `id` field because it will be already generate by the postgres database.
+[type=verification]
+Could you see the list of users returned by the `/users` endpoint?
 
-![](imgs/33.png)
+. Also we will use a Orders REST api you can explore then through the `swagger-ui`
 
-In the end, you should have something like:
+link:https://orders-rest-fuse-{user-username}.{openshift-app-host}[https://orders-rest-fuse-{user-username}.{openshift-app-host}, window="_blank", , id="orders-rest-api"]
 
-![](imgs/34.png)
 
-Now, click on `Save` and then on `Publish`
+image::images/38.png[]
+image::images/39.png[]
 
-![](imgs/35.png)
+[time=10]
+== 3Scale first contact through Wizard
 
-Now, we need to wait Openshift build our container. When done, you should see `Published version 1` on the top of the page.
+First, to get familiarized with 3Scale, let's open the link:{3scale-user-url}/p/admin/onboarding/wizard[Welcome Wizard, window="_blank", , id="welcome-wizard"]Welcome Wizard that is part of 3Scale admin onboarding for users' first access.
 
-If you go to the `Home` page, we have 1 integration running.
+. We are going to Create a *Backend* > a *Product* > and *Define some Method* and test it. 
 
-![](imgs/37.png)
+. This is the most basic flow. That is a lot of things being created automatically for you behind the scenes. We are going to explore it in detail in the next sessions.
 
-Our last step is to expose our integration on Openshift using `Route`s.
+. 3Scale Wizard Welcome
++
+image::images/api-onboarding/wizard-01.png[]
 
-```bash
-oc create route edge i-users-api --service=i-users-api -n fuse
-```
+. 3Scale Wizard How does 3Scale Work
++
+image::images/api-onboarding/wizard-02.png[]
 
-### Testing your integration
+. 3Scale Wizard Define a Backend
++
+image::images/api-onboarding/wizard-03.png[]
 
-You can check if your integration is working properly running:
+. 3Scale Wizard Define a Product
++
+image::images/api-onboarding/wizard-04.png[]
 
-```bash
-curl https://$(oc get route -n fuse | grep i-users-api | awk '{print $2"/users"}')
-```
+. 3Scale Wizard Test Request
++
+image::images/api-onboarding/wizard-05.png[]
 
-Or you can try with [httpie](https://httpie.org/):
+. 3Scale Wizard Overview Request Flow
++
+image::images/api-onboarding/wizard-06.png[]
 
-```bash
-http https://$(oc get route -n fuse | grep i-users-api | awk '{print $2"/users"}')
-```
+. 3Scale Wizard What's next
++
+image::images/api-onboarding/wizard-07.png[]
 
-### Exposing your API using 3Scale
+. Try to spend some time exploring the product, navigating into the menus, trying to discover by yourself the features before we go ahead. Go to `Integration` > `Configuration` and you will be able to find the test URL.
 
-#### Importing API from Openshift
+. As it is a GET Operation we can easily test inserting the URL into the Internet Browser
++
+image::images/api-onboarding/wizard-08.png[]
 
-First, let's import our API from Openshift. To do that, just click on `NEW API`.
+. Look what happen if we remove the `Key` parameter from the URL.
++
+image::images/api-onboarding/wizard-09.png[]
 
-![](imgs/38.png)
+. Navigate to `API Product` and look that we can promote our URL to *Staging* that represents a *Draft* version of our API. And as soon as we are sure that this is the behavior expected we can promote to *Production*.
++
+image::images/api-onboarding/wizard-10.png[]
 
-Select `Import from Openshift`. Then choose `fuse` for the `Namespace` combobox and `i-users-api` for the `Name` field. Click on `Create Service`.
+. Promote to *Production*
++
+image::images/api-onboarding/wizard-11.png[]
 
-![](imgs/39.png)
+[time=10]
+== Creating the User API Backends
 
-Now you should see your new api on the 3scale dashboard.
+API Backends is a fundamental part of 3Scale API Management, when we have a bunch of API Backends it allows to manage it easily.
 
-![](imgs/40.png)
+. Select `Backends` on the Tabs.
++
+image::images/create-backends/create-backends-01.png[]
 
-#### Creating an application plan for our API
+. Click on `NEW BACKEND`
++
+image::images/create-backends/create-backends-02.png[]
 
-We need to create an application plan for our users api. Click on `Dashboard` menu and then on `i-users-api`
+. Fill the `Users API` backend creation form and click on `Create Backend`
 
-![](imgs/41.png)
+* `Name`: `Users API`
+* `System Name`: `users-api`
+* `Description`: `Users API`
+* `Private Base URL`: `https://i-users-api-fuse-{user-username}.{openshift-app-host}`
 
-Now, click on `Create Application Plan`.
++
+image::images/create-backends/create-backends-03.png[]
 
-![](imgs/42.png)
+. Check `User API` Backend Information and select `Methods`
++
+image::images/create-backends/create-backends-04.png[]
 
-For the `Name` field use: `Basic Plan`. And for the `System name`: `basic-plan`. Now click on `Create Application Plan`.
+. As we have two methods on the API we will define two methods. Methods helps to define specific rules for rate limit, monetization, enable and disable a specific endpoints and to have a more granular analytics metrics.
++
+image::images/create-backends/create-backends-05.png[]
 
-![](imgs/43.png)
+. Create the `Get Users` method providing the following attributes and then click on `Create Method`.
 
-We need to publish our application plan. To do that, click on `Publish`
+* `Friendly Name`: `Get Users`
+* `System Name`: `get-users`
+* `Description`: `Get all users`
 
-![](imgs/44.png)
++
+image::images/create-backends/create-backends-06.png[]
 
-#### Creating an application for our API
+. Create the `Create Users` method providing the following attributes and then click on `Create Method`.
 
+* `Friendly Name`: `Create Users`
+* `System Name`: `create-users`
+* `Description`: `Create an user`
+
++
+image::images/create-backends/create-backends-07.png[]
+
+. Now your `Methods & Metrics` page should be like that
++
+image::images/create-backends/create-backends-08.png[]
+
+. Let's create the `mapping rule`. `Mapping rule` is the http path that will be requested to access the endpoint.
+
+. Create the `Get users` Mapping rule
+
+* `Verb`: `GET`
+* `Pattern`: `/users`
+* `Metric or Method to increment`: `Get Users` (The method that we created previously)
+
++
+image::images/create-backends/create-backends-09.png[]
+
+. Create the `Create users` Mapping rule
+
+* `Verb`: `POST`
+* `Pattern`: `/users`
+* `Metric or Method to increment`: `Create user` (The method that we created previously)
+
++
+image::images/create-backends/create-backends-11.png[]
+
+. The mapping rules overview should be like that
++
+image::images/create-backends/create-backends-12.png[]
+
+. The `Users API` Backend Overview should look like that
++
+image::images/create-backends/create-backends-13.png[]
+
+. Now, let's repeat the Backend creation process but for the `Orders API`, Click on `Create Backend`
+
+* `Name`: `Orders API`
+* `System Name`: `orders-api`
+* `Description`: `Orders API`
+* `Private Base URL`: `https://order-rest-fuse-{user-username}.{openshift-app-host}`
+
++
+image::images/create-backends/create-backends-15.png[]
+
+. Create two GET methods, `Get orders` and `Get all user orders`
++
+image::images/create-backends/create-backends-17.png[]
++
+image::images/create-backends/create-backends-19.png[]
+
+. Your methods should looks like that
++
+image::images/create-backends/create-backends-20.png[]
+
+. Create the respective `mapping rules`
++
+image::images/create-backends/create-backends-22.png[]
++
+image::images/create-backends/create-backends-23.png[]
+
+. Your mapping rules should looks like that
++
+image::images/create-backends/create-backends-24.png[]
+
+. And finnaly our backends should be like that at this moment
++
+image::images/create-backends/create-backends-25.png[]
+
+Now that we have the Backends we can work to create a `Product` representing multiples backends 
+and finally expose this API on 3Scale API Management.
+
+[time=10]
+== Creating the Users API Product
+
+. Access the `PRODUCTS` tab and select `NEW PRODUCT`
++
+image::images/create-product/create-product-01.png[]
+
+. Select the `Define manually` option and use the following attributes
+
+* `Name`: `Users API`
+* `System name`: `users-api`
+* `Description`: `Get all information about users and relative orders`
+
++
+image::images/create-product/create-product-02.png[]
+
+. This is the overview of your API Product right now
++
+image::images/create-product/create-product-03.png[]
+
+. Let's create two plans, one sandbox for enable users to try and another production that the user needs to pay for use it without any rate limit restriction. Create the `sandbox` application plan.
+
+* `Name`: `sandbox`
+* `System Name`: `sandbox`
+
++
+image::images/create-product/create-product-04.png[]
+
+. Create another plan named `production`
+
+* `Name`: `production`
+* `System Name`: `production`
+* `Trial Period (days)`: `7`
+* `Setup fee`: `1`
+* `Cost per month`: `5`
+
++
+image::images/create-product/create-product-06.png[]
+
+. Now that you have both created, please `Publish` both.
++ 
+image::images/create-product/create-product-07.png[]
+
+. Let's add the backends the we previously created
++ 
+image::images/create-product/create-product-07-1.png[]
+image::images/create-product/create-product-08.png[]
+
+. Add `Users API` Backend
+
+* `Backend Name`: `Users API`
+* `Path`: `/users-api`
+
++
+image::images/create-product/create-product-09.png[]
+
+. Add `Orders API` Backend
+
+* `Backend Name`: `Orders API`
+* `Path`: `/orders-api`
+
++
+image::images/create-product/create-product-10.png[]
+
+. Your backends properly configured should looks like this
++
+image::images/create-product/create-product-11.png[]
+
+. Delete the actual `GET /` Mapping Rule
++
+image::images/create-product/create-product-12.png[]
+
+. Promote the API to `Staging`
++
+image::images/create-product/create-product-13.png[]
+
+. Promote the API to `Production`
++
+image::images/create-product/create-product-14.png[]
+
+. As you can see the USER_KEY is invalid at this moment. It's because we don't have an Application yet, in order to solve it let's create one. On the `Up menu` select `Audience`.
++
+image::images/create-product/create-product-15.png[]
+
+. Select `Developer` from the account list
++ 
+image::images/create-product/create-product-16.png[]
+
+. Select `Application` on the horizontal menu
++ 
+image::images/create-product/create-product-17.png[]
+
+. Click on `Create Application`
++
+image::images/create-product/create-product-18.png[]
+
+. Select the `Production` plan under `Users API`
+
+image::images/create-product/create-product-19.png[]
+image::images/create-product/create-product-20.png[]
+image::images/create-product/create-product-21.png[]
+image::images/create-product/create-product-22.png[]
+
+. Now that we have an application, the `USER_KEY` query parameter is filled with a valid key from the application that we just created.
++
+image::images/create-product/create-product-23.png[]
+image::images/create-product/create-product-24.png[]
+
+[time=10]
+== Exposing User API through developer portal
+
+. Select `Audience` on the upper drop down menu
++ 
+image::images/developer-portal/developer-portal-01.png[]
+
+. Select `Audience` on the upper drop down menu
++ 
+image::images/developer-portal/developer-portal-02.png[]
+
+. Select `Developer Portal` > `Content` > `Homepage`. Before to start editing, Click on `Visit Portal` to see the Out of the box Developer Portal provided. Notice that it is pre configured to use the `Echo API`, we will work to change it to work with the `Users API` that we just configured.
++ 
+image::images/developer-portal/developer-portal-03.png[]
+
+. Change the line 5 of the Homepage to `Users API` instead of `Echo API`
++ 
+image::images/developer-portal/developer-portal-04.png[]
+
+. Change the line `124` to `users-api` instead of `api`
++ 
+image::images/developer-portal/developer-portal-06.png[]
+
+. Before go ahead let's toggle some features of the portal, for this select the `Feature Visibility` from the side menu, and select to `Show` all of them 
++ 
+image::images/developer-portal/developer-portal-06-1.png[]
+image::images/developer-portal/developer-portal-06-2.png[]
+
+. Take a look on the changes, it's already working with the Users API, and showing the applications plans defined.
++ 
+image::images/developer-portal/developer-portal-07.png[]
+
+. But the application plans is not properly defined, to best reflect real situations we need to do some adjusts on both of them. Navigate to the `Application Plans` option, using `Product: Users API` > `Applications` > `Application Plans` > `Sandbox`.
++
+image::images/developer-portal/developer-portal-08.png[]
+
+. Select `Limits` option under `Product Level` and click on `New usage limit`
++ 
+image::images/developer-portal/developer-portal-09.png[]
+
+. Define a limit of 5 requests per minute
++
+image::images/developer-portal/developer-portal-10.png[]
+
+. Define those features allowing the user choose the which has the best fit. In order to make this plan *Read Only* Disable the `Create User` method and toggle following features:
+
+* Community Support
+* Free
+* Limited Calls
+* Read Only
+
++
+image::images/developer-portal/developer-portal-11.png[]
+
+. Your application plans should looks like it, remember to publish both
++
+image::images/developer-portal/developer-portal-12.png[]
+
+. For the `Production Plan`, create a new `pricing rule` on the `Product Level` since it doesn't have any limit, it's fair to be paid.
+image::images/developer-portal/developer-portal-13.png[] 
+
+. Define a rule that charge `1$` for `10 API calls`. Yes, it's expensive, our service is first class and the content is super valuable.
+image::images/developer-portal/developer-portal-14.png[]
+
+. In the `Production` plan, toggle the following Features:
+
+* 24/7 support
+* Unlimited calls
+* Read and Write
+
++
+image::images/developer-portal/developer-portal-15.png[]
+
+. Return to the `Developer Portal` web page and take a look in the plans description, after click on `Signup to plan sandbox`
++
+image::images/developer-portal/developer-portal-16.png[]
+
+. Fill the form with the application information
++ 
+image::images/developer-portal/developer-portal-17.png[]
+
+. The new account needs to be *Activated*, usually this process is via Email, but as we are not working with valid email address here, let's approve it manually in the following steps.
++
+image::images/developer-portal/developer-portal-18.png[]
+
+. Navigate to the `Audience > Account > Listing` and click on `Activate`.
++
+image::images/developer-portal/developer-portal-19.png[]
+
+. Return to the `Developer Portal` and do the sign in providing the credentials that you defined
++
+image::images/developer-portal/developer-portal-20.png[]
+
+. Now that you are authenticated, click on `See your Applications & Credentials`
++
+image::images/developer-portal/developer-portal-21.png[]
+
+. Click on `Create new application`
++
+image::images/developer-portal/developer-portal-23.png[]
+
+. Select the service `Users API`
++
+image::images/developer-portal/developer-portal-24.png[]
+
+. Fill the form with `mobile-app` for Name and `Mobile App` for the description field
++
+image::images/developer-portal/developer-portal-25.png[]
+
+. The applicaiton is properly registered and you can use the `User keys` to call the `Users API`.
++
+image::images/developer-portal/developer-portal-26.png[]
+
+. Make some requests, and after going to see the `Statistics` into the developer portal, it allows the user to have total control over how it is using each API.
+image::images/developer-portal/developer-portal-27.png[]
+
+[time=5]
+== User APIs Analytics
+
+. After making some requests into the `User APIs` you can see how the analytics works. Hits represent all the requests, and also you can see the requests for each method.
++
+image::images/analytics/analytics-01.png[]
+
+. Click on the `Top application` in the left menu and see which is the applications that are consuming the `Users API`. This metric is strategic to understand how the customers is using your APIs and try to adjust plans to better fit them.
++
+image::images/analytics/analytics-02.png[]
+
+. It's also possible to see the metrics into the perspective of the `Backend`.
++
+image::images/analytics/analytics-03.png[]
