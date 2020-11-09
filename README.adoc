@@ -1,39 +1,68 @@
-// Attributes
-:walkthrough: API Management
-:title: Lab 4 - {walkthrough}
-:user-password: openshift
-:standard-fail-text: Verify that you followed all the steps. If you continue to have issues, contact a workshop assistant.
-:namespace: {user-username}
+# Demo using Fuse Online and 3Scale 
 
-// URLs
-:fuse-user-url: https://syndesis-fuse-{user-username}.{openshift-app-host}/
-:3scale-user-url: https://{user-username}-admin.{openshift-app-host}/
-:3scale-user-devportal: https://{user-username}.{openshift-app-host}/
+Demo showing Fuse Online and 3Scale. This guide was based on Rodrigo Ramalho, it's new and  updated version.
 
-[id='api-management']
-= {title}
+We will create and expose an API that get data from a posgresql database using Fuse Online. After that, we'll expose it through 3Scale, you will set it up on the API Management platform to have control and visibility about this API.
 
-As part of the acquisition, your team at International Inc's is now working with Fleur de Lune's IT department to learn more about low code integration development and API Management. You are assigned on a mission to offer total 
-control of the APIs as security, rate limit, and monetization through a centralized management interface for the APIs existent
-on the International Inc. 
+![](imgs/imagemh1.png)
 
-To see how it will work on the entire environment, you must implement a first and basic service called users API. 
-So you are going to develop a microservice that retrieve users and orders information from a Postgre database and expose it as API, 
-Therefore, you will set it up on the API Management platform to have control and visibility about this API. 
+## Pre-req
 
-*Audience:* Enterprise Integrators, System Architects, Developers, API Designers, Data Integrators
+* Account on 3scale: https://www.3scale.net/
+* Anyone environment RHPDS with OCP **OR** the **"easy"** form: this environment have the operators of Fuse online instantiated and ready to use yet >> RHPDS > "Workshops > DIL Streaming - Event-driven Workshop
 
-*Overview*
+## Links
 
-image::images/00-lab-overview-01.png[Overview, role="integr8ly-img-responsive"]
+* 3Scale Dashboard Samples: https://rramalho-admin.3scale.net
+* Link fuse online available on OCP cluster
+* OCP web link  are available via email when the environment are provisioned
 
-API Products and Backends
+## Easy/oficial environment: Workshops > DIL Streaming - Event-driven Workshop
 
-image::images/00-lab-overview-02.png[Overview, role="integr8ly-img-responsive"]
+* When instantiated will receive all credentials of environment 
+* The projects are create automatically 
+* This environment have the operator of Fuse in each project called "fuse-userX", just click route of "Syndesys...hproxy" and Fuse Online will open. (In this demo was used **"fuse-user1"**)
 
-API consume flow through available Application Plans
+### **First of all:** Creating database on Openshift
 
-image::images/00-lab-overview-03.png[Overview, role="integr8ly-img-responsive"]
+First, login to Openshift using the credentials sent to you via e-mail, in this DEMO was used login **'admin'**. Now, let's create a new database in project `fuse-userX`: (If you prefer, can create all things via Openshift WEB)
+```bash
+# Create a new postgresql database using a Openshift template
+oc new-app --template=postgresql-persistent --param=POSTGRESQL_PASSWORD=redhat --param=POSTGRESQL_USER=redhat --param=POSTGRESQL_DATABASE=sampledb -n fuse-userX
+```
+When the pod is ready, run:
+
+```bash
+# Get postgresql pod name
+POD_POSTGRESQL=$(oc get po | grep postgresql | awk '{print $1}')
+
+# Create database
+oc exec -it $POD_POSTGRESQL -- bash -c 'psql -U redhat -d sampledb -c "CREATE TABLE users(id serial PRIMARY KEY,name VARCHAR (50),phone VARCHAR (50),age integer);"'
+
+# Populate the database
+oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Jade', '(21) 12345678', 24);\""
+oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Francisco', '(11) 95474-8099', 40);\""
+oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Pedro', '(11) 23454367', 29);\""
+oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Rafael', '(21) 95474-8099', 55);\""
+oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"INSERT INTO users(name, phone, age) VALUES  ('Rodrigo', '(11) 95474-8099', 36);\""
+
+# Make sure your data is saved
+oc exec -it $POD_POSTGRESQL -- bash -c "psql -U redhat -d sampledb -c \"select * from users;\""
+```
+
+- If for some reason you need to reinstall the database, just run:
+
+```bash
+oc delete all -l app=postgresql-persistent -n fuse-demo
+oc delete pvc postgresql -n fuse-demo
+oc delete secret postgresql -n fuse-demo
+```
+
+## 1. Creating the Users API using the Low code Integration Solution Fuse Online
+If you provisioned the **easy** environment have the operator of Fuse online in each project called "fuse-userX", just click route of "Syndesys...hproxy" and Fuse Online will open.
+
+image::images/routefuse.png[]
+
 
 *Credentials*
 
